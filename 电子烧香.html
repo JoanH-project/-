@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>电子烧香</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      touch-action: manipulation;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #3b1d1d, #0d0505 68%);
+      color: #fff4dc;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      padding: 24px;
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 8px;
+      letter-spacing: 4px;
+    }
+
+    .subtitle {
+      color: #d8b98a;
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+
+    .altar {
+      position: relative;
+      height: 420px;
+      margin: 0 auto 28px;
+      border-radius: 24px;
+      background: linear-gradient(#4a2020, #1a0909);
+      box-shadow: 0 0 48px rgba(255, 145, 40, 0.18);
+      overflow: hidden;
+      border: 1px solid rgba(255, 220, 150, 0.2);
+    }
+
+    .halo {
+      position: absolute;
+      top: 36px;
+      left: 50%;
+      width: 160px;
+      height: 160px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 194, 82, 0.65), rgba(255, 120, 40, 0.04) 72%);
+      filter: blur(5px);
+      animation: glow 2.5s infinite alternate;
+    }
+
+    .plate {
+      position: absolute;
+      bottom: 54px;
+      left: 50%;
+      width: 240px;
+      height: 72px;
+      transform: translateX(-50%);
+      background: linear-gradient(#8a3e24, #4d1d14);
+      border-radius: 50%;
+      box-shadow: 0 14px 0 #2b100c;
+      z-index: 4;
+    }
+
+    .ash {
+      position: absolute;
+      bottom: 96px;
+      left: 50%;
+      width: 170px;
+      height: 38px;
+      transform: translateX(-50%);
+      background: radial-gradient(circle, #b89a78, #69503d);
+      border-radius: 50%;
+      z-index: 5;
+    }
+
+    .ash::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 4px;
+      width: 40px;
+      height: 14px;
+      transform: translateX(-50%) scale(0);
+      background: rgba(40, 35, 30, 0.35);
+      border-radius: 50%;
+      transition: transform 1s;
+    }
+
+    .ash.burned::after {
+      transform: translateX(-50%) scale(2.2);
+    }
+
+    .incense {
+      position: absolute;
+      bottom: 115px;
+      width: 8px;
+      height: 170px;
+      background: linear-gradient(#e3a45e 0 11%, #7b2b1d 11% 100%);
+      border-radius: 10px;
+      transform-origin: bottom center;
+      z-index: 6;
+      opacity: 0;
+    }
+
+    .incense.on {
+      opacity: 1;
+    }
+
+    .incense.burning {
+      animation: burnDown 9s linear forwards;
+    }
+
+    .i1 {
+      left: 46%;
+      transform: rotate(-8deg);
+    }
+
+    .i2 {
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .i3 {
+      left: 54%;
+      transform: rotate(8deg);
+    }
+
+    .fire {
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      width: 18px;
+      height: 30px;
+      transform: translateX(-50%);
+      background: radial-gradient(circle at 50% 70%, #fff7b0, #ff9a1f 45%, #ff3d00 75%);
+      border-radius: 50% 50% 45% 45%;
+      animation: flame 0.28s infinite alternate;
+      filter: blur(0.2px);
+    }
+
+    .incense.done .fire {
+      display: none;
+    }
+
+    .smoke {
+      position: absolute;
+      bottom: 285px;
+      left: 50%;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.34);
+      filter: blur(7px);
+      opacity: 0;
+      animation: none;
+      z-index: 3;
+    }
+
+    .smoke.show {
+      animation: smoke 3.2s linear infinite;
+    }
+
+    .smoke.s1 {
+      margin-left: -25px;
+      animation-delay: 0s;
+    }
+
+    .smoke.s2 {
+      margin-left: 0;
+      animation-delay: 0.7s;
+    }
+
+    .smoke.s3 {
+      margin-left: 25px;
+      animation-delay: 1.4s;
+    }
+
+    .wish {
+      position: absolute;
+      top: 220px;
+      left: 50%;
+      width: 100%;
+      transform: translateX(-50%);
+      font-size: 18px;
+      color: #ffe0a3;
+      opacity: 0;
+      transition: opacity 0.4s;
+      z-index: 8;
+    }
+
+    .wish.show {
+      opacity: 1;
+    }
+
+    button {
+      width: 100%;
+      height: 52px;
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #f6c46c, #c96d2c);
+      color: #3a1608;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+      transition: transform 0.1s ease;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .count {
+      margin-top: 14px;
+      color: #d8b98a;
+      font-size: 14px;
+    }
+
+    .debug {
+      margin-top: 10px;
+      font-size: 12px;
+      color: rgba(216, 185, 138, 0.5);
+    }
+
+    @keyframes glow {
+      from {
+        opacity: 0.45;
+        transform: translateX(-50%) scale(0.95);
+      }
+
+      to {
+        opacity: 0.85;
+        transform: translateX(-50%) scale(1.08);
+      }
+    }
+
+    @keyframes flame {
+      from {
+        transform: translateX(-50%) scale(0.85) rotate(-4deg);
+      }
+
+      to {
+        transform: translateX(-50%) scale(1.1) rotate(4deg);
+      }
+    }
+
+    @keyframes smoke {
+      0% {
+        opacity: 0;
+        transform: translateY(0) translateX(0) scale(0.5);
+      }
+
+      20% {
+        opacity: 0.45;
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(-145px) translateX(34px) scale(2.4);
+      }
+    }
+
+    @keyframes burnDown {
+      0% {
+        height: 170px;
+      }
+
+      100% {
+        height: 28px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <h1>电子烧香</h1>
+    <div class="subtitle">心诚则灵，香火慢燃</div>
+
+    <div class="altar">
+      <div class="halo"></div>
+
+      <div class="smoke s1"></div>
+      <div class="smoke s2"></div>
+      <div class="smoke s3"></div>
+
+      <div class="incense i1">
+        <div class="fire"></div>
+      </div>
+
+      <div class="incense i2">
+        <div class="fire"></div>
+      </div>
+
+      <div class="incense i3">
+        <div class="fire"></div>
+      </div>
+
+      <div class="wish" id="wish">香火已起，愿你所求皆顺遂</div>
+
+      <div class="ash" id="ash"></div>
+      <div class="plate"></div>
+    </div>
+
+    <button id="btn">上香祈愿</button>
+    <div class="count" id="count">今日已上香 0 次</div>
+    <div class="debug" id="debug">点击按钮开始</div>
+  </div>
+
+  <!-- 备用音频方案：使用HTML5 Audio标签 -->
+  <audio id="fallbackAudio" preload="auto">
+    <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT" type="audio/wav">
+  
+
+  <script>
+    let count = 0;
+    let audioCtx = null;
+    let ambientNodes = [];
+    let isBurning = false;
+    let isAudioUnlocked = false;
+    let useWebAudio = true;
+    const debugEl = document.getElementById("debug");
+
+    function updateDebug(text) {
+      debugEl.innerText = text;
+      console.log(text);
+    }
+
+    // 终极音频解锁：在用户点击的同步上下文中执行所有操作
+    function unlockAudio() {
+      if (isAudioUnlocked) return true;
+      
+      updateDebug("正在解锁音频...");
+      
+      try {
+        // 方法1：尝试Web Audio API
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContextClass();
+        
+        // 播放一个非常短的声音来强制解锁
+        const buffer = audioCtx.createBuffer(1, 1, 22050);
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+        source.start();
+        
+        // 立即恢复上下文
+        if (audioCtx.state === "suspended") {
+          audioCtx.resume();
+        }
+        
+        isAudioUnlocked = true;
+        useWebAudio = true;
+        updateDebug("Web Audio 已解锁 ✓");
+        return true;
+      } catch (e) {
+        updateDebug("Web Audio 失败: " + e.message);
+        
+        // 方法2：尝试HTML5 Audio备用方案
+        try {
+          const fallbackAudio = document.getElementById("fallbackAudio");
+          fallbackAudio.volume = 0.1;
+          fallbackAudio.play().then(() => {
+            fallbackAudio.pause();
+            fallbackAudio.currentTime = 0;
+            isAudioUnlocked = true;
+            useWebAudio = false;
+            updateDebug("HTML5 Audio 已解锁 ✓");
+          }).catch(err => {
+            updateDebug("音频解锁失败: " + err.message);
+          });
+        } catch (e2) {
+          updateDebug("所有音频方案失败: " + e2.message);
+        }
+        
+        return false;
+      }
+    }
+
+    function playBurningSoundWebAudio() {
+      if (!isAudioUnlocked || !useWebAudio || !audioCtx) return;
+      
+      try {
+        if (audioCtx.state === "suspended") {
+          audioCtx.resume();
+        }
+
+        stopBurningSound(true);
+
+        const masterGain = audioCtx.createGain();
+        masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
+        masterGain.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + 0.3);
+        masterGain.connect(audioCtx.destination);
+
+        // 燃烧白噪音（最主要的声音）
+        const noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 2, audioCtx.sampleRate);
+        const noiseData = noiseBuffer.getChannelData(0);
+        
+        for (let i = 0; i < noiseData.length; i++) {
+          noiseData[i] = (Math.random() * 2 - 1) * 0.5;
+        }
+
+        const noise = audioCtx.createBufferSource();
+        const noiseFilter = audioCtx.createBiquadFilter();
+        const noiseGain = audioCtx.createGain();
+
+        noise.buffer = noiseBuffer;
+        noise.loop = true;
+
+        noiseFilter.type = "lowpass";
+        noiseFilter.frequency.setValueAtTime(400, audioCtx.currentTime);
+        noiseFilter.Q.setValueAtTime(1, audioCtx.currentTime);
+
+        noiseGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+
+        noise.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(masterGain);
+        noise.start();
+
+        // 低频嗡鸣声
+        const lowOsc = audioCtx.createOscillator();
+        const lowGain = audioCtx.createGain();
+
+        lowOsc.type = "sine";
+        lowOsc.frequency.setValueAtTime(60, audioCtx.currentTime);
+        lowGain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+
+        lowOsc.connect(lowGain);
+        lowGain.connect(masterGain);
+        lowOsc.start();
+
+        ambientNodes = [masterGain, lowOsc, noise];
+        updateDebug("正在播放燃烧音效...");
+      } catch (e) {
+        updateDebug("播放失败: " + e.message);
+      }
+    }
+
+    function playBurningSoundFallback() {
+      if (!isAudioUnlocked || useWebAudio) return;
+      
+      try {
+        const fallbackAudio = document.getElementById("fallbackAudio");
+        fallbackAudio.loop = true;
+        fallbackAudio.volume = 0.15;
+        fallbackAudio.play();
+        updateDebug("正在播放备用音效...");
+      } catch (e) {
+        updateDebug("备用音效失败: " + e.message);
+      }
+    }
+
+    function stopBurningSound(immediate = false) {
+      // 停止Web Audio
+      if (ambientNodes.length > 0) {
+        const masterGain = ambientNodes[0];
+        
+        if (audioCtx && masterGain && masterGain.gain && !immediate) {
+          masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+          masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
+          masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
+        }
+
+        setTimeout(() => {
+          ambientNodes.forEach(node => {
+            try {
+              if (node.stop) node.stop();
+              if (node.disconnect) node.disconnect();
+            } catch (e) {}
+          });
+          ambientNodes = [];
+        }, immediate ? 0 : 600);
+      }
+      
+      // 停止HTML5 Audio
+      try {
+        const fallbackAudio = document.getElementById("fallbackAudio");
+        fallbackAudio.pause();
+        fallbackAudio.currentTime = 0;
+      } catch (e) {}
+    }
+
+    function resetIncense() {
+      document.querySelectorAll(".incense").forEach(item => {
+        item.classList.remove("on", "burning", "done");
+        void item.offsetWidth;
+      });
+
+      document.querySelectorAll(".smoke").forEach(item => {
+        item.classList.remove("show");
+      });
+
+      document.getElementById("ash").classList.remove("burned");
+    }
+
+    async function burnIncense() {
+      if (isBurning) return;
+
+      // 最重要：在点击的第一时间解锁音频
+      unlockAudio();
+
+      isBurning = true;
+      count++;
+
+      const btn = document.getElementById("btn");
+      const wish = document.getElementById("wish");
+      const ash = document.getElementById("ash");
+
+      btn.disabled = true;
+      btn.innerText = "香火燃烧中...";
+      document.getElementById("count").innerText = `今日已上香 ${count} 次`;
+
+      resetIncense();
+
+      document.querySelectorAll(".incense").forEach(item => {
+        item.classList.add("on");
+        setTimeout(() => item.classList.add("burning"), 80);
+      });
+
+      document.querySelectorAll(".smoke").forEach(item => {
+        item.classList.add("show");
+      });
+
+      wish.innerText = "香火已起，愿你所求皆顺遂";
+      wish.classList.add("show");
+
+      // 延迟100ms播放，确保音频完全解锁
+      setTimeout(() => {
+        if (useWebAudio) {
+          playBurningSoundWebAudio();
+        } else {
+          playBurningSoundFallback();
+        }
+      }, 100);
+
+      setTimeout(() => {
+        wish.innerText = "香将燃尽，心愿已送达";
+      }, 6500);
+
+      setTimeout(() => {
+        document.querySelectorAll(".incense").forEach(item => {
+          item.classList.add("done");
+        });
+
+        document.querySelectorAll(".smoke").forEach(item => {
+          item.classList.remove("show");
+        });
+
+        ash.classList.add("burned");
+        stopBurningSound();
+
+        wish.innerText = "香已燃尽，愿望已送达";
+        btn.disabled = false;
+        btn.innerText = "再次上香";
+
+        isBurning = false;
+        updateDebug("点击再次上香");
+      }, 9200);
+    }
+
+    // 绑定事件
+    const btn = document.getElementById("btn");
+    
+    // 同时监听所有可能的点击事件
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      burnIncense();
+    });
+    
+    btn.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      burnIncense();
+    });
+    
+    btn.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      burnIncense();
+    });
+
+    // 页面加载提示
+    window.addEventListener("load", () => {
+      updateDebug("页面加载完成，点击按钮上香");
+      
+      // 提前尝试预加载
+      document.body.addEventListener("click", unlockAudio, { once: true });
+      document.body.addEventListener("touchstart", unlockAudio, { once: true });
+    });
+  </script>
+</body>
+</html>
